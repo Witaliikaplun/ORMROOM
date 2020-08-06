@@ -182,17 +182,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void downloadOneUrl(Call<RetrofitModel> call) throws IOException {
-
         //TODO HttpUrlConnection
-
-
         call.enqueue(new Callback<RetrofitModel>() {
             @Override
             public void onResponse(@androidx.annotation.NonNull Call<RetrofitModel> call,
                                    @androidx.annotation.NonNull Response<RetrofitModel> response) {
                 if (response.isSuccessful()) {
-                    //RetrofitModel retrofitModel;
-
                     modelList.add(response.body());
                     mInfoTextView.append("\nLogin" + modelList.get(modelList.size() - 1).getLogin() +
                             "\nId" + modelList.get(modelList.size() - 1).getId() +
@@ -202,7 +197,6 @@ public class MainActivity extends AppCompatActivity {
                     mInfoTextView.setText("onResponse: " + response.code());
                 progressBar.setVisibility(View.GONE);
             }
-
             @Override
             public void onFailure(@androidx.annotation.NonNull Call<RetrofitModel> call, @NonNull Throwable t) {
                 mInfoTextView.setText("onFailure: " + t.getMessage());
