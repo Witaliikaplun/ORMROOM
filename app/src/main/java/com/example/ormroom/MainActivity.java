@@ -55,82 +55,75 @@ public class MainActivity extends AppCompatActivity {
         btnSelectAllRoom = findViewById(R.id.btnSelectAllRoom);
         btnDeleteAllRoom = findViewById(R.id.btnDeleteAllRoom);
 
-        btnLoad.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                mInfoTextView.setText("");
-                Retrofit retrofit;
+        btnLoad.setOnClickListener(view -> {
+            mInfoTextView.setText("");
+            Retrofit retrofit;
 
+            try {
+                retrofit = new Retrofit.Builder()
+                        .baseUrl("https://api.github.com")
+                        .addConverterFactory(GsonConverterFactory.create())
+                        .build();
+                restAPIforUser = retrofit.create(IRestAPIforUser.class);
+            } catch (Exception e) {
+                mInfoTextView.setText("Exception: " + e.getMessage());
+                return;
+            }
+
+            //Call<List<RetrofitModel>> call = restAPI.loadUsers();
+            //Call<RetrofitModel> call = restAPIforUser.loadUser1("defunkt");
+            Call <List<RetrofitModel>> call = restAPIforUser.loadUsers();
+            ConnectivityManager connectivityManager =
+                    (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+            NetworkInfo networkinfo = connectivityManager.getActiveNetworkInfo();
+            if (networkinfo != null && networkinfo.isConnected()) {
                 try {
-                    retrofit = new Retrofit.Builder()
-                            .baseUrl("https://api.github.com")
-                            .addConverterFactory(GsonConverterFactory.create())
-                            .build();
-                    restAPIforUser = retrofit.create(IRestAPIforUser.class);
-                } catch (Exception e) {
-                    mInfoTextView.setText("Exception: " + e.getMessage());
-                    return;
+                    progressBar.setVisibility(View.VISIBLE);
+                    downloadOneUrl(call);
+                } catch (IOException e) {
+                    Log.e("server", "failed", e);
                 }
-
-                //Call<List<RetrofitModel>> call = restAPI.loadUsers();
-                Call<RetrofitModel> call = restAPIforUser.loadUser1("defunkt");
-                ConnectivityManager connectivityManager =
-                        (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-
-                NetworkInfo networkinfo = connectivityManager.getActiveNetworkInfo();
-                if (networkinfo != null && networkinfo.isConnected()) {
-                    try {
-                        progressBar.setVisibility(View.VISIBLE);
-                        downloadOneUrl(call);
-                    } catch (IOException e) {
-                        Log.e("server", "failed", e);
-                    }
-                }
-                //else Toast.makeText(this, "Подключите интернет", Toast.LENGTH_SHORT).show();
             }
+
         });
 
 
-        btnSaveAllRoom.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Single<Bundle> singleSaveAllRoom = Single.create(new SingleOnSubscribe<Bundle>() {
-                    @Override
-                    public void subscribe(@NonNull SingleEmitter<Bundle> emitter) throws
-                            Exception {
-                        String curLogin = "";
-                        String curUserID = "";
-                        String curAvatarUrl = "";
-                        Date first = new Date();
-                        List<RoomModel> roomModelList = new ArrayList<>();
-                        RoomModel roomModel = new RoomModel();
-                        for (RetrofitModel curItem : modelList) { //проходимся по листу, что нам достался от retrofit
-                            curLogin = curItem.getLogin();
-                            curUserID = String.valueOf(curItem.getId());
-                            curAvatarUrl = curItem.getAvatarUrl();
-                            roomModel.setLogin(curLogin);
-                            roomModel.setAvatarUrl(curAvatarUrl);
-                            roomModel.setUserId(curUserID);
-                            roomModelList.add(roomModel);
-                            OrmApp.get().getDB().productDao().insertAll(roomModelList);
-                        }
-                        Date second = new Date();
-                        Bundle bundle = new Bundle();
-                        List<RoomModel> tempList =
-                                OrmApp.get().getDB().productDao().getAll();
-                        bundle.putInt("count", tempList.size());
-                        bundle.putLong("msek", second.getTime() - first.getTime());
-                        emitter.onSuccess(bundle);
+        btnSaveAllRoom.setOnClickListener(view -> {
+            Single<Bundle> singleSaveAllRoom = Single.create(new SingleOnSubscribe<Bundle>() {
+                @Override
+                public void subscribe(@NonNull SingleEmitter<Bundle> emitter) throws
+                        Exception {
+                    String curLogin = "";
+                    String curUserID = "";
+                    String curAvatarUrl = "";
+                    Date first = new Date();
+                    List<RoomModel> roomModelList = new ArrayList<>();
+                    RoomModel roomModel = new RoomModel();
+                    for (RetrofitModel curItem : modelList) { //проходимся по листу, что нам достался от retrofit
+                        curLogin = curItem.getLogin();
+                        curUserID = String.valueOf(curItem.getId());
+                        curAvatarUrl = curItem.getAvatarUrl();
+                        roomModel.setLogin(curLogin);
+                        roomModel.setAvatarUrl(curAvatarUrl);
+                        roomModel.setUserId(curUserID);
+                        roomModelList.add(roomModel);
+                        OrmApp.get().getDB().productDao().insertAll(roomModelList);
                     }
-                }).subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread());
-                singleSaveAllRoom.subscribeWith(createObserver());
-            }
+                    Date second = new Date();
+                    Bundle bundle = new Bundle();
+                    List<RoomModel> tempList =
+                            OrmApp.get().getDB().productDao().getAll();
+                    bundle.putInt("count", tempList.size());
+                    bundle.putLong("msek", second.getTime() - first.getTime());
+                    emitter.onSuccess(bundle);
+                }
+            }).subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread());
+            singleSaveAllRoom.subscribeWith(createObserver());
         });
 
-        btnSelectAllRoom.setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick (View view){
+        btnSelectAllRoom.setOnClickListener(view -> {
         Single<Bundle> singleSelectAllRoom = Single.create(new SingleOnSubscribe<Bundle>() {
             @Override
             public void subscribe(@NonNull SingleEmitter<Bundle> emitter) throws
@@ -151,54 +144,63 @@ public class MainActivity extends AppCompatActivity {
         }).subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread());
         singleSelectAllRoom.subscribeWith(createObserver());
-    }
-
     });
-        btnDeleteAllRoom.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Single<Bundle> singleDeleteAllRoom = Single.create(new SingleOnSubscribe<Bundle>() {
-            @Override
-            public void subscribe(@NonNull SingleEmitter<Bundle> emitter) throws
-                    Exception {
-                try {
-                    Date first = new Date();
-                    OrmApp.get().getDB().productDao().deleteAll();
-                    Date second = new Date();
-                    Bundle bundle = new Bundle();
-                    //bundle.putInt("count", products.size());
-                    bundle.putLong("msek", second.getTime() - first.getTime());
-                    emitter.onSuccess(bundle);
-                } catch (Exception e) {
-                    emitter.onError(e);
-                }
+        btnDeleteAllRoom.setOnClickListener(view -> {
+            Single<Bundle> singleDeleteAllRoom = Single.create(new SingleOnSubscribe<Bundle>() {
+        @Override
+        public void subscribe(@NonNull SingleEmitter<Bundle> emitter) throws
+                Exception {
+            try {
+                Date first = new Date();
+                OrmApp.get().getDB().productDao().deleteAll();
+                Date second = new Date();
+                Bundle bundle = new Bundle();
+                bundle.putLong("msek", second.getTime() - first.getTime());
+                emitter.onSuccess(bundle);
+            } catch (Exception e) {
+                emitter.onError(e);
             }
-        }).subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
-        singleDeleteAllRoom.subscribeWith(createObserver());
-            }
+        }
+    }).subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread());
+    singleDeleteAllRoom.subscribeWith(createObserver());
         });
 
     }
 
-    private void downloadOneUrl(Call<RetrofitModel> call) throws IOException {
+    private void downloadOneUrl(Call <List<RetrofitModel>> call) throws IOException {
         //TODO HttpUrlConnection
-        call.enqueue(new Callback<RetrofitModel>() {
+        call.enqueue(new Callback <List<RetrofitModel>>() {
             @Override
-            public void onResponse(@androidx.annotation.NonNull Call<RetrofitModel> call,
-                                   @androidx.annotation.NonNull Response<RetrofitModel> response) {
-                if (response.isSuccessful()) {
-                    modelList.add(response.body());
-                    mInfoTextView.append("\nLogin" + modelList.get(modelList.size() - 1).getLogin() +
-                            "\nId" + modelList.get(modelList.size() - 1).getId() +
-                            "\nURL" + modelList.get(modelList.size() - 1).getAvatarUrl() +
-                            "\n-------------");
+            public void onResponse(@androidx.annotation.NonNull Call <List<RetrofitModel>> call,
+                                   @androidx.annotation.NonNull Response <List<RetrofitModel>> response) {
+//                if (response.isSuccessful()) {
+////                    modelList.add(response.body());
+////                    mInfoTextView.append("\nLogin" + modelList.get(modelList.size() - 1).getLogin() +
+////                            "\nId" + modelList.get(modelList.size() - 1).getId() +
+////                            "\nURL" + modelList.get(modelList.size() - 1).getAvatarUrl() +
+////                            "\n-------------");
+////                } else
+////                    mInfoTextView.setText("onResponse: " + response.code());
+////                progressBar.setVisibility(View.GONE);
+
+                                if (response.isSuccessful()) {
+                    modelList = response.body();
+                                    for (int i = 0; i < modelList.size(); i++) {
+                                        mInfoTextView.append("\nLogin" + modelList.get(i).getLogin() +
+                                                "\nId" + modelList.get(i).getId() +
+                                                "\nURL" + modelList.get(i).getAvatarUrl() +
+                                                "\n-------------");
+                                    }
+
                 } else
                     mInfoTextView.setText("onResponse: " + response.code());
                 progressBar.setVisibility(View.GONE);
+
+
             }
             @Override
-            public void onFailure(@androidx.annotation.NonNull Call<RetrofitModel> call, @NonNull Throwable t) {
+            public void onFailure(@androidx.annotation.NonNull Call <List<RetrofitModel>> call, @NonNull Throwable t) {
                 mInfoTextView.setText("onFailure: " + t.getMessage());
                 progressBar.setVisibility(View.GONE);
             }
@@ -210,13 +212,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             protected void onStart() {
                 super.onStart();
-//                    progressBar . setVisibility ( View.VISIBLE );
+//                progressBar . setVisibility ( View.VISIBLE );
                 mInfoTextView.setText("");
             }
 
             @Override
             public void onSuccess(@NonNull Bundle bundle) {
-//                    progressBar.setVisibility ( View . GONE );
+//                progressBar.setVisibility ( View . GONE );
                 mInfoTextView.append("количество = " + bundle.getInt("count") +
                         "\n миллисекунд = " + bundle.getLong("msek"));
             }
