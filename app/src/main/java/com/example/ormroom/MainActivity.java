@@ -17,6 +17,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import javax.inject.Inject;
+
 import io.reactivex.Single;
 import io.reactivex.SingleEmitter;
 import io.reactivex.SingleOnSubscribe;
@@ -42,10 +45,16 @@ public class MainActivity extends AppCompatActivity {
     List<RetrofitModel> modelList = new ArrayList<>();
     DisposableSingleObserver<Bundle> dso;
 
+    @Inject
+    Call <List<RetrofitModel>> call;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        AppComponent appComponent = OrmApp.getComponent();
+        appComponent.injectsToMainActivity(this);
 
 
         mInfoTextView = findViewById(R.id.tvLoad);
@@ -57,22 +66,20 @@ public class MainActivity extends AppCompatActivity {
 
         btnLoad.setOnClickListener(view -> {
             mInfoTextView.setText("");
-            Retrofit retrofit;
-
-            try {
-                retrofit = new Retrofit.Builder()
-                        .baseUrl("https://api.github.com")
-                        .addConverterFactory(GsonConverterFactory.create())
-                        .build();
-                restAPIforUser = retrofit.create(IRestAPIforUser.class);
-            } catch (Exception e) {
-                mInfoTextView.setText("Exception: " + e.getMessage());
-                return;
-            }
-
-            //Call<List<RetrofitModel>> call = restAPI.loadUsers();
-            //Call<RetrofitModel> call = restAPIforUser.loadUser1("defunkt");
-            Call <List<RetrofitModel>> call = restAPIforUser.loadUsers();
+//            Retrofit retrofit;
+//
+//            try {
+//                retrofit = new Retrofit.Builder()
+//                        .baseUrl("https://api.github.com")
+//                        .addConverterFactory(GsonConverterFactory.create())
+//                        .build();
+//                restAPIforUser = retrofit.create(IRestAPIforUser.class);
+//            } catch (Exception e) {
+//                mInfoTextView.setText("Exception: " + e.getMessage());
+//                return;
+//            }
+//
+//            Call <List<RetrofitModel>> call = restAPIforUser.loadUsers();
             ConnectivityManager connectivityManager =
                     (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 
