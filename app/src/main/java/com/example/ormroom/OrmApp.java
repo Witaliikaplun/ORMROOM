@@ -5,21 +5,27 @@ import android.app.Application;
 import androidx.room.Room;
 
 public class OrmApp extends Application {
+    private static AppComponent component;
 
-    private static final String DATABASE_NAME = "DATABASE_USER_GIT" ;
-    public static UserGitDatabase database ;
-    public static OrmApp INSTANCE ;
+    private static final String DATABASE_NAME = "DATABASE_USER_GIT";
+    public static UserGitDatabase database;
+    public static OrmApp INSTANCE;
     @Override
     public void onCreate() {
         super .onCreate();
-        database = Room. databaseBuilder (getApplicationContext()   ,
+        database = Room. databaseBuilder (getApplicationContext(),
                 UserGitDatabase. class , DATABASE_NAME ).build();
-        INSTANCE = this ;
+        INSTANCE = this;
+
+        component = DaggerAppComponent.create();
     }
     public UserGitDatabase getDB() {
-        return database ;
+        return database;
     }
     public static OrmApp get() {
-        return INSTANCE ;
+        return INSTANCE;
+    }
+    public static AppComponent getComponent() {
+        return component;
     }
 }
