@@ -201,7 +201,7 @@ public class MainActivity extends AppCompatActivity {
     singleDeleteAllRoom.subscribeWith(createObserver());
         });
 
-        
+
         setupToolBar();
 
         SwitchAction switchAction = new SwitchAction("Test switch", new SwitchAction.Listener() {
