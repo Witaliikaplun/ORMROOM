@@ -231,18 +231,8 @@ public class MainActivity extends AppCompatActivity {
         debugView = findViewById(R.id.debug_view);
 
         debugView.modules(
-//                new ActionsModule(switchAction, buttonAction, spinnerAction),
-//                //new FpsModule(Takt.stock(getApplication())),
-//                //new PicassoModule(picasso),
-//                new LocationModule(),
-//                new LogsModule(),
-//                new ScalpelModule(this),
-//                new TimberModule(),
-//                new OkHttp3Module(okHttpClient),
-//                new NetworkQualityModule(this),
-//                new DeviceModule(),
-//                new BuildModule(),
-//                new NetworkModule(),
+                new DeviceModule(),
+                new BuildModule(),
                 new SettingsModule()
         );
 
